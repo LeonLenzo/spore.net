@@ -6,22 +6,36 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:deploy": "./scripts/deploy.sh",
+    "db:deploy:dry": "./scripts/deploy.sh --dry-run",
+    "db:migrate": "node scripts/deploy-schema.js",
+    "db:migrate:dry": "node scripts/deploy-schema.js --dry-run",
+    "data:ingest": "node scripts/ingest-data.js",
+    "data:ingest:dry": "node scripts/ingest-data.js --dry-run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.58.0",
+    "@turf/turf": "^7.2.0",
+    "@types/leaflet": "^1.9.20",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
+    "leaflet": "^1.9.4",
+    "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.4"
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
-    "@eslint/eslintrc": "^3"
+    "supabase": "^2.47.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
