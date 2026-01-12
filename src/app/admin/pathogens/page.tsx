@@ -114,12 +114,13 @@ export default function PathogenManagement() {
       setEditingPathogen(null);
       loadPathogens();
       loadDiseaseTypes();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving pathogen:', error);
-      if (error.code === '23505') {
+      const err = error as { code?: string; message?: string };
+      if (err.code === '23505') {
         alert('A pathogen with this species name already exists');
       } else {
-        alert('Failed to save pathogen: ' + error.message);
+        alert('Failed to save pathogen: ' + (err.message || 'Unknown error'));
       }
     }
   };
@@ -148,12 +149,13 @@ export default function PathogenManagement() {
       if (error) throw error;
       alert('Pathogen deleted successfully');
       loadPathogens();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting pathogen:', error);
-      if (error.code === '23503') {
+      const err = error as { code?: string; message?: string };
+      if (err.code === '23503') {
         alert('Cannot delete this pathogen because it has associated detection data');
       } else {
-        alert('Failed to delete pathogen: ' + error.message);
+        alert('Failed to delete pathogen: ' + (err.message || 'Unknown error'));
       }
     }
   };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getUniqueYears, getUniquePathogens, pathogens, pathogenColors } from '@/data/sampleData';
+import { pathogens, pathogenColors } from '@/data/sampleData';
 
 interface ControlPanelProps {
   selectedYear: number;
@@ -25,10 +25,6 @@ export default function ControlPanel({
   onSelectAll
 }: ControlPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const getPathogenInfo = (species: string) => {
-    return pathogens.find(p => p.species === species);
-  };
 
   // Only include pathogens that are available in the current dataset
   const groupedPathogens = pathogens

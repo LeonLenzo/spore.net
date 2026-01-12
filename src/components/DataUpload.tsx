@@ -153,6 +153,7 @@ export default function DataUpload({ onDataUploaded, onClose }: DataUploadProps)
     return 'low';
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const validateAndSetData = (data: any) => {
     if (!Array.isArray(data)) {
       throw new Error('Data must be an array of samples');

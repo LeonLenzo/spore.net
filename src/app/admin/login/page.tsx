@@ -34,7 +34,7 @@ export default function AdminLogin() {
       } else {
         setError('Invalid username or password');
       }
-    } catch (error) {
+    } catch {
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);

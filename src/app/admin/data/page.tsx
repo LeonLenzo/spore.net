@@ -171,12 +171,13 @@ export default function DataManagement() {
 
       resetRouteForm();
       loadRoutes();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving route:', error);
-      if (error.code === '23505') {
+      const err = error as { code?: string; message?: string };
+      if (err.code === '23505') {
         alert('A sampling route with this sample ID already exists');
       } else {
-        alert('Failed to save sampling route: ' + error.message);
+        alert('Failed to save sampling route: ' + (err.message || 'Unknown error'));
       }
     }
   };
@@ -203,12 +204,13 @@ export default function DataManagement() {
       alert('Pathogen detection added successfully');
       setDetectionFormData({ pathogen_species_id: '', read_count: '' });
       loadDetections(selectedRoute.id);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving detection:', error);
-      if (error.code === '23505') {
+      const err = error as { code?: string; message?: string };
+      if (err.code === '23505') {
         alert('This pathogen detection already exists for this route');
       } else {
-        alert('Failed to save pathogen detection: ' + error.message);
+        alert('Failed to save pathogen detection: ' + (err.message || 'Unknown error'));
       }
     }
   };
@@ -247,9 +249,10 @@ export default function DataManagement() {
         setSelectedRoute(null);
         setDetections([]);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting route:', error);
-      alert('Failed to delete sampling route: ' + error.message);
+      const err = error as { message?: string };
+      alert('Failed to delete sampling route: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -270,9 +273,10 @@ export default function DataManagement() {
       if (selectedRoute) {
         loadDetections(selectedRoute.id);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting detection:', error);
-      alert('Failed to delete pathogen detection: ' + error.message);
+      const err = error as { message?: string };
+      alert('Failed to delete pathogen detection: ' + (err.message || 'Unknown error'));
     }
   };
 

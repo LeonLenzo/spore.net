@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
-import { Sample, samples, getUniqueYears, getUniquePathogens, pathogens, pathogenColors } from '@/data/sampleData';
+import { Sample, pathogenColors } from '@/data/sampleData';
 
 // Fix for default markers in Next.js
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -31,6 +31,7 @@ interface PathogenCircle {
   color: string;
   opacity: number;
   sample: Sample;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pathogenData: any;
   position: 'start' | 'end' | 'midpoint';
 }

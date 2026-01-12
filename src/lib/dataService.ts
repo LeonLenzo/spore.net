@@ -1,4 +1,4 @@
-import { supabase, transformToAppFormat, DatabaseSample } from './supabase';
+import { supabase, transformToAppFormat } from './supabase';
 import { Sample } from '@/data/sampleData';
 
 /**
@@ -25,6 +25,7 @@ export async function fetchSamples(): Promise<Sample[]> {
       throw error;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return transformToAppFormat(data as any[]);
   } catch (error) {
     console.error('Failed to fetch samples from database:', error);
@@ -58,6 +59,7 @@ export async function fetchSamplesByYear(year: number): Promise<Sample[]> {
       throw error;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return transformToAppFormat(data as any[]);
   } catch (error) {
     console.error(`Failed to fetch samples for year ${year}:`, error);
