@@ -97,7 +97,7 @@ function createPathogenCircles(sample: Sample, selectedPathogens: string[], sele
 
 
 export default function PathogenMap({ selectedYear, selectedPathogens, onSampleSelect, samples: propSamples, selectedSample }: PathogenMapProps) {
-  const samplesData = propSamples || samples;
+  const samplesData = propSamples;
 
   const handleSampleClick = (sample: Sample) => {
     const newSelection = selectedSample?.id === sample.id ? null : sample;
