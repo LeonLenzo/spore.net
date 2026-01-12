@@ -109,7 +109,7 @@ export default function PathogenMap({ selectedYear, selectedPathogens, onSampleS
 
   const allPathogenCircles: PathogenCircle[] = [];
   filteredSamples.forEach(sample => {
-    const sampleCircles = createPathogenCircles(sample, selectedPathogens, selectedSample);
+    const sampleCircles = createPathogenCircles(sample, selectedPathogens, selectedSample || null);
     allPathogenCircles.push(...sampleCircles);
   });
 
