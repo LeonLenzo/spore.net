@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthService } from '@/lib/auth';
 
-export default function AdminLogin() {
+export default function Login() {
   const [credentials, setCredentials] = useState({
-    username: '',
+    email: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -16,8 +16,16 @@ export default function AdminLogin() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (AuthService.isAuthenticated()) {
-      router.push('/admin');
+    const user = AuthService.getCurrentUser();
+    if (user) {
+      // Redirect based on role
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else if (user.role === 'sampler') {
+        router.push('/field');
+      } else {
+        router.push('/');
+      }
     }
   }, [router]);
 
@@ -27,14 +35,22 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const success = AuthService.login(credentials.username, credentials.password);
+      const user = await AuthService.login(credentials.email, credentials.password);
 
-      if (success) {
-        router.push('/admin');
+      if (user) {
+        // Redirect based on role
+        if (user.role === 'admin') {
+          router.push('/admin');
+        } else if (user.role === 'sampler') {
+          router.push('/field');
+        } else {
+          router.push('/');
+        }
       } else {
-        setError('Invalid username or password');
+        setError('Invalid email or password');
       }
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err);
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
@@ -46,10 +62,10 @@ export default function AdminLogin() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Admin Login
+            Sign in to Spore.net
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Access the spore.net administration panel
+            Pathogen monitoring and field collection
           </p>
         </div>
       </div>
@@ -64,20 +80,20 @@ export default function AdminLogin() {
             )}
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
               </label>
               <div className="mt-1">
                 <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
                   required
-                  value={credentials.username}
-                  onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter admin username"
+                  value={credentials.email}
+                  onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="your@email.com"
                 />
               </div>
             </div>
@@ -95,8 +111,8 @@ export default function AdminLogin() {
                   required
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter admin password"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Enter password"
                 />
               </div>
             </div>
@@ -118,24 +134,6 @@ export default function AdminLogin() {
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Default credentials for development
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded">
-              <p><strong>Username:</strong> admin</p>
-              <p><strong>Password:</strong> spore123</p>
-            </div>
-          </div>
 
           <div className="mt-6 text-center">
             <Link

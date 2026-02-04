@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ControlPanel from '@/components/ControlPanel';
 import SampleDetails from '@/components/SampleDetails';
 import { Sample } from '@/data/sampleData';
 import { fetchSamples, fetchUniqueYears, fetchUniquePathogens } from '@/lib/dataService';
+import { AuthService } from '@/lib/auth';
 
 // Dynamically import the map to avoid SSR issues
 const PathogenMap = dynamic(() => import('@/components/PathogenMap'), {
@@ -15,6 +17,7 @@ const PathogenMap = dynamic(() => import('@/components/PathogenMap'), {
 });
 
 export default function Home() {
+  const router = useRouter();
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedPathogens, setSelectedPathogens] = useState<string[]>([]);
   const [selectedSample, setSelectedSample] = useState<Sample | null>(null);
@@ -22,6 +25,7 @@ export default function Home() {
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [availablePathogens, setAvailablePathogens] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(AuthService.getCurrentUser());
 
   // Load initial data
   useEffect(() => {
@@ -70,6 +74,12 @@ export default function Home() {
     setSelectedPathogens([]);
   };
 
+  const handleLogout = () => {
+    AuthService.logout();
+    setUser(null);
+    router.refresh();
+  };
+
 
   if (loading) {
     return (
@@ -91,12 +101,54 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-gray-900">spore.net</h1>
             <p className="text-gray-700 text-sm font-medium">Crop Diseases and Where to Find Them</p>
           </div>
-          <Link
-            href="/admin"
-            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-          >
-            Admin
-          </Link>
+
+          {/* User Navigation */}
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                {/* Show user info */}
+                <div className="text-right mr-2">
+                  <p className="text-sm font-medium text-gray-900">
+                    {user.fullName || user.email}
+                  </p>
+                  <p className="text-xs text-gray-600 capitalize">{user.role}</p>
+                </div>
+
+                {/* Role-based navigation buttons */}
+                {user.role === 'sampler' || user.role === 'admin' ? (
+                  <Link
+                    href="/field"
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Field Collection
+                  </Link>
+                ) : null}
+
+                {user.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Login
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

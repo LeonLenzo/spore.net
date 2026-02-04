@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import AdminAuthGuard from '@/components/AdminAuthGuard';
+import RoleGuard from '@/components/RoleGuard';
+import MetabarcodeUpload from '@/components/MetabarcodeUpload';
 import { AuthService } from '@/lib/auth';
 
 interface SamplingRoute {
@@ -302,19 +303,19 @@ export default function DataManagement() {
 
   if (loading) {
     return (
-      <AdminAuthGuard>
+      <RoleGuard requiredRole="admin">
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading sample data...</p>
           </div>
         </div>
-      </AdminAuthGuard>
+      </RoleGuard>
     );
   }
 
   return (
-    <AdminAuthGuard>
+    <RoleGuard requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow">
@@ -346,6 +347,11 @@ export default function DataManagement() {
 
         {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* CSV Upload Section */}
+        <div className="mb-6">
+          <MetabarcodeUpload />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Left Column: Sampling Routes */}
@@ -619,6 +625,6 @@ export default function DataManagement() {
         </div>
       </main>
       </div>
-    </AdminAuthGuard>
+    </RoleGuard>
   );
 }

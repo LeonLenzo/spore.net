@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import AdminAuthGuard from '@/components/AdminAuthGuard';
+import RoleGuard from '@/components/RoleGuard';
 import { AuthService } from '@/lib/auth';
 
 interface PathogenSpecies {
@@ -187,7 +187,7 @@ export default function PathogenManagement() {
   }
 
   return (
-    <AdminAuthGuard>
+    <RoleGuard requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow">
@@ -396,6 +396,6 @@ export default function PathogenManagement() {
         </div>
       </main>
       </div>
-    </AdminAuthGuard>
+    </RoleGuard>
   );
 }

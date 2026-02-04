@@ -1,17 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import AdminAuthGuard from '@/components/AdminAuthGuard';
+import RoleGuard from '@/components/RoleGuard';
 import { AuthService } from '@/lib/auth';
 
 export default function AdminDashboard() {
   const handleLogout = () => {
     AuthService.logout();
-    window.location.href = '/admin/login';
+    window.location.href = '/';
   };
 
   return (
-    <AdminAuthGuard>
+    <RoleGuard requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow">
@@ -139,6 +139,6 @@ export default function AdminDashboard() {
         </div>
       </main>
       </div>
-    </AdminAuthGuard>
+    </RoleGuard>
   );
 }
