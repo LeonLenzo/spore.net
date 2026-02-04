@@ -22,6 +22,17 @@ interface GPSPosition {
 
 type CollectionStatus = 'idle' | 'confirming' | 'recording' | 'saving';
 
+const LOCAL_STORAGE_KEY = 'field_collection_session';
+
+interface SavedSession {
+  sampleId: string;
+  status: CollectionStatus;
+  startPosition: GPSPosition | null;
+  currentPosition: GPSPosition | null;
+  trackingPoints: GPSPosition[];
+  startTime: number;
+}
+
 export default function FieldCollectionPage() {
   const router = useRouter();
   const [status, setStatus] = useState<CollectionStatus>('idle');
@@ -32,12 +43,65 @@ export default function FieldCollectionPage() {
   const [error, setError] = useState('');
   const [gpsError, setGpsError] = useState('');
   const [useManualEntry, setUseManualEntry] = useState(false);
+  const [sessionRecovered, setSessionRecovered] = useState(false);
   const watchIdRef = useRef<number | null>(null);
+  const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get current user
   const user = AuthService.getCurrentUser();
 
-  // Start GPS tracking
+  // Recover session on mount
+  useEffect(() => {
+    const savedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedSession) {
+      try {
+        const session: SavedSession = JSON.parse(savedSession);
+        if (session.status === 'recording') {
+          setSampleId(session.sampleId);
+          setStartPosition(session.startPosition);
+          setCurrentPosition(session.currentPosition);
+          setTrackingPoints(session.trackingPoints);
+          setStatus('recording');
+          setSessionRecovered(true);
+          console.log('Session recovered:', session.sampleId);
+        }
+      } catch (e) {
+        console.error('Failed to recover session:', e);
+      }
+    }
+  }, []);
+
+  // Auto-save session to localStorage
+  useEffect(() => {
+    if (status === 'recording') {
+      const saveSession = () => {
+        const session: SavedSession = {
+          sampleId,
+          status,
+          startPosition,
+          currentPosition,
+          trackingPoints,
+          startTime: Date.now()
+        };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(session));
+        console.log(`Session saved: ${trackingPoints.length} points`);
+      };
+
+      // Save immediately
+      saveSession();
+
+      // Then save every 10 seconds
+      saveIntervalRef.current = setInterval(saveSession, 10000);
+
+      return () => {
+        if (saveIntervalRef.current) {
+          clearInterval(saveIntervalRef.current);
+        }
+      };
+    }
+  }, [status, sampleId, startPosition, currentPosition, trackingPoints]);
+
+  // Start GPS tracking with background support
   useEffect(() => {
     if (status === 'recording' && !useManualEntry) {
       if (!navigator.geolocation) {
@@ -45,6 +109,20 @@ export default function FieldCollectionPage() {
         setUseManualEntry(true);
         return;
       }
+
+      // Request wake lock to keep screen on (if supported)
+      let wakeLock: any = null;
+      const requestWakeLock = async () => {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLock = await (navigator as any).wakeLock.request('screen');
+            console.log('Wake lock activated');
+          }
+        } catch (err) {
+          console.log('Wake lock not supported or denied:', err);
+        }
+      };
+      requestWakeLock();
 
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
@@ -61,7 +139,18 @@ export default function FieldCollectionPage() {
           setTrackingPoints(prev => {
             const lastPoint = prev[prev.length - 1];
             if (!lastPoint || position.timestamp - lastPoint.timestamp > 30000) {
-              return [...prev, gpsPos];
+              const newPoints = [...prev, gpsPos];
+              // Also save to localStorage immediately
+              const session: SavedSession = {
+                sampleId,
+                status: 'recording',
+                startPosition,
+                currentPosition: gpsPos,
+                trackingPoints: newPoints,
+                startTime: Date.now()
+              };
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(session));
+              return newPoints;
             }
             return prev;
           });
@@ -81,9 +170,13 @@ export default function FieldCollectionPage() {
         if (watchIdRef.current !== null) {
           navigator.geolocation.clearWatch(watchIdRef.current);
         }
+        if (wakeLock) {
+          wakeLock.release();
+          console.log('Wake lock released');
+        }
       };
     }
-  }, [status, useManualEntry]);
+  }, [status, useManualEntry, sampleId, startPosition]);
 
   const handleStartSample = () => {
     setStatus('confirming');
@@ -204,8 +297,11 @@ export default function FieldCollectionPage() {
         }
       }
 
+      // Clear localStorage after successful save
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+
       // Reset and redirect
-      alert(`Sample ${sampleId} saved successfully!`);
+      alert(`Sample ${sampleId} saved successfully! ${trackingPoints.length} GPS points recorded.`);
       setSampleId('');
       setStartPosition(null);
       setCurrentPosition(null);
@@ -214,13 +310,14 @@ export default function FieldCollectionPage() {
       router.push('/admin/data');
     } catch (err) {
       console.error('Error saving sample:', err);
-      setError('Failed to save sample. Please try again.');
+      setError('Failed to save sample. Please try again. Data is saved locally.');
       setStatus('recording');
     }
   };
 
   const handleCancel = () => {
-    if (confirm('Are you sure you want to cancel this sample collection?')) {
+    if (confirm('Are you sure you want to cancel this sample collection? All tracking data will be lost.')) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
       setSampleId('');
       setStartPosition(null);
       setCurrentPosition(null);
@@ -380,12 +477,24 @@ export default function FieldCollectionPage() {
 
             {status === 'recording' && (
               <div className="space-y-4">
+                {sessionRecovered && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-sm text-green-800">
+                      ✓ Session recovered! Continuing from {trackingPoints.length} saved points.
+                    </p>
+                  </div>
+                )}
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
                     <span className="font-semibold text-blue-900">Recording</span>
+                    <span className="text-xs text-blue-700 ml-auto">Auto-saving...</span>
                   </div>
                   <p className="text-sm text-blue-800 font-mono">{sampleId}</p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Safe to close browser - data saves automatically
+                  </p>
                 </div>
 
                 {startPosition && (
