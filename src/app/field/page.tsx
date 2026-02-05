@@ -365,7 +365,7 @@ export default function FieldCollectionPage() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Map View */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-h-[50vh] lg:min-h-0">
             <FieldMap
               currentPosition={currentPosition}
               startPosition={startPosition}
@@ -390,22 +390,22 @@ export default function FieldCollectionPage() {
           </div>
 
           {/* Control Panel */}
-          <div className="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 p-6 overflow-y-auto">
+          <div className="lg:w-96 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 p-4 sm:p-6 overflow-y-auto max-h-[40vh] lg:max-h-none">
             {status === 'idle' && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                     Current Location
                   </h2>
                 </div>
 
                 {currentPosition ? (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">GPS Coordinates</p>
-                    <p className="text-lg font-mono text-gray-900">
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">GPS Coordinates</p>
+                    <p className="text-base sm:text-lg font-mono text-gray-900">
                       {currentPosition.latitude.toFixed(6)}
                     </p>
-                    <p className="text-lg font-mono text-gray-900">
+                    <p className="text-base sm:text-lg font-mono text-gray-900">
                       {currentPosition.longitude.toFixed(6)}
                     </p>
                     {currentPosition.accuracy && (
@@ -415,9 +415,9 @@ export default function FieldCollectionPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-sm text-gray-600">Getting GPS location...</p>
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 mx-auto mt-2"></div>
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4 text-center">
+                    <p className="text-xs sm:text-sm text-gray-600">Getting GPS location...</p>
+                    <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-gray-600 mx-auto mt-2"></div>
                   </div>
                 )}
               </div>

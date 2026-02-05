@@ -95,19 +95,19 @@ export default function Home() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b px-6 py-4">
+      <header className="bg-white shadow-sm border-b px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">spore.net</h1>
-            <p className="text-gray-700 text-sm font-medium">Crop Diseases and Where to Find Them</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">spore.net</h1>
+            <p className="text-gray-700 text-xs sm:text-sm font-medium hidden sm:block">Crop Diseases and Where to Find Them</p>
           </div>
 
           {/* User Navigation */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {user ? (
               <>
-                {/* Show user info */}
-                <div className="text-right mr-2">
+                {/* Show user info - hidden on small screens */}
+                <div className="text-right mr-2 hidden md:block">
                   <p className="text-sm font-medium text-gray-900">
                     {user.fullName || user.email}
                   </p>
@@ -118,7 +118,7 @@ export default function Home() {
                 {(user.role === 'sampler' || user.role === 'admin') && (
                   <Link
                     href="/field"
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
                   >
                     Sample
                   </Link>
@@ -128,30 +128,31 @@ export default function Home() {
                   <>
                     <Link
                       href="/admin/data"
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors hidden sm:inline-block"
                     >
-                      Manage Data
+                      <span className="hidden lg:inline">Manage </span>Data
                     </Link>
                     <Link
                       href="/admin/pathogens"
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors hidden sm:inline-block"
                     >
-                      Manage Pathogens
+                      <span className="hidden lg:inline">Manage </span>Pathogens
                     </Link>
                   </>
                 )}
 
                 <button
                   onClick={handleLogout}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
                 >
-                  Logout
+                  <span className="hidden sm:inline">Logout</span>
+                  <span className="sm:hidden">Exit</span>
                 </button>
               </>
             ) : (
               <Link
                 href="/login"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
               >
                 Login
               </Link>
