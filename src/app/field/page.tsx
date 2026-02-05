@@ -103,7 +103,7 @@ export default function FieldCollectionPage() {
 
   // Start GPS tracking with background support
   useEffect(() => {
-    if (status === 'recording' && !useManualEntry) {
+    if ((status === 'recording' || status === 'idle') && !useManualEntry) {
       if (!navigator.geolocation) {
         setGpsError('GPS not supported on this device');
         setUseManualEntry(true);
@@ -337,33 +337,26 @@ export default function FieldCollectionPage() {
     <RoleGuard requiredRole="sampler">
       <div className="h-screen flex flex-col bg-gray-50">
         {/* Header */}
-        <header className="bg-white shadow-sm z-10">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <header className="bg-white shadow-sm border-b px-6 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Field Collection</h1>
-              <p className="text-sm text-gray-600">
-                {user?.fullName || user?.email}
-                {status === 'recording' && sampleId && (
-                  <span className="ml-2 text-blue-600 font-medium">
-                    • Recording: {sampleId}
-                  </span>
-                )}
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900">spore.net</h1>
+              <p className="text-gray-700 text-sm font-medium">Field Collection</p>
             </div>
-            <div className="flex gap-2">
-              {user?.role === 'admin' && (
+            <div className="flex items-center gap-3">
+              {status === 'idle' && (
                 <button
-                  onClick={() => router.push('/admin')}
-                  className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+                  onClick={handleStartSample}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Admin
+                  Start Sampling
                 </button>
               )}
               <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md"
+                onClick={() => router.push('/')}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                Logout
+                Back to Map
               </button>
             </div>
           </div>
@@ -402,28 +395,31 @@ export default function FieldCollectionPage() {
               <div className="space-y-4">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    Ready to Start
+                    Current Location
                   </h2>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Begin a new sampling trip. Your location will be tracked automatically.
-                  </p>
                 </div>
 
-                <button
-                  onClick={handleStartSample}
-                  className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg transition-colors"
-                >
-                  Begin Sample
-                </button>
-
-                <div className="pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => router.push('/')}
-                    className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm"
-                  >
-                    View Map
-                  </button>
-                </div>
+                {currentPosition ? (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">GPS Coordinates</p>
+                    <p className="text-lg font-mono text-gray-900">
+                      {currentPosition.latitude.toFixed(6)}
+                    </p>
+                    <p className="text-lg font-mono text-gray-900">
+                      {currentPosition.longitude.toFixed(6)}
+                    </p>
+                    {currentPosition.accuracy && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Accuracy: ±{currentPosition.accuracy.toFixed(1)}m
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center">
+                    <p className="text-sm text-gray-600">Getting GPS location...</p>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 mx-auto mt-2"></div>
+                  </div>
+                )}
               </div>
             )}
 
