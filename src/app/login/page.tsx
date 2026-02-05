@@ -18,14 +18,7 @@ export default function Login() {
   useEffect(() => {
     const user = AuthService.getCurrentUser();
     if (user) {
-      // Redirect based on role
-      if (user.role === 'admin') {
-        router.push('/admin');
-      } else if (user.role === 'sampler') {
-        router.push('/field');
-      } else {
-        router.push('/');
-      }
+      router.push('/');
     }
   }, [router]);
 
@@ -38,14 +31,8 @@ export default function Login() {
       const user = await AuthService.login(credentials.email, credentials.password);
 
       if (user) {
-        // Redirect based on role
-        if (user.role === 'admin') {
-          router.push('/admin');
-        } else if (user.role === 'sampler') {
-          router.push('/field');
-        } else {
-          router.push('/');
-        }
+        // Always redirect to main page
+        router.push('/');
       } else {
         setError('Invalid email or password');
       }

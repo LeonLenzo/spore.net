@@ -115,22 +115,30 @@ export default function Home() {
                 </div>
 
                 {/* Role-based navigation buttons */}
-                {user.role === 'sampler' || user.role === 'admin' ? (
+                {(user.role === 'sampler' || user.role === 'admin') && (
                   <Link
                     href="/field"
                     className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    Field Collection
+                    Sample
                   </Link>
-                ) : null}
+                )}
 
                 {user.role === 'admin' && (
-                  <Link
-                    href="/admin"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    Admin
-                  </Link>
+                  <>
+                    <Link
+                      href="/admin/data"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Manage Data
+                    </Link>
+                    <Link
+                      href="/admin/pathogens"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Manage Pathogens
+                    </Link>
+                  </>
                 )}
 
                 <button
