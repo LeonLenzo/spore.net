@@ -35,10 +35,10 @@ export default function SampleDetails({ sample, onClose }: SampleDetailsProps) {
   );
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-xl z-50 overflow-y-auto">
-      <div className="p-4 border-b bg-gray-50">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-96 max-w-[50vw] bg-white bg-opacity-95 backdrop-blur-sm shadow-xl z-50 overflow-y-auto">
+      <div className="p-3 sm:p-4 border-b bg-gray-50 bg-opacity-90">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-black">Sample Details</h2>
+          <h2 className="text-base sm:text-xl font-bold text-black">Sample Details</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-200 rounded text-gray-900 font-bold text-lg"
@@ -48,7 +48,7 @@ export default function SampleDetails({ sample, onClose }: SampleDetailsProps) {
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
         <div>
           <h3 className="text-lg font-bold mb-2 text-black">{sample.location}</h3>
           <div className="grid grid-cols-2 gap-2 text-sm">

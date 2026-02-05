@@ -26,6 +26,7 @@ export default function Home() {
   const [availablePathogens, setAvailablePathogens] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(AuthService.getCurrentUser());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -97,17 +98,29 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">spore.net</h1>
-            <p className="text-gray-700 text-xs sm:text-sm font-medium hidden sm:block">Crop Diseases and Where to Find Them</p>
+          <div className="flex items-center gap-3">
+            {/* Hamburger menu button - mobile only */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 hover:bg-gray-100 rounded-md text-gray-900"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">spore.net</h1>
+              <p className="text-gray-700 text-xs sm:text-sm font-medium hidden sm:block">Crop Diseases and Where to Find Them</p>
+            </div>
           </div>
 
-          {/* User Navigation */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                {/* Show user info - hidden on small screens */}
-                <div className="text-right mr-2 hidden md:block">
+                {/* Show user info */}
+                <div className="text-right mr-2">
                   <p className="text-sm font-medium text-gray-900">
                     {user.fullName || user.email}
                   </p>
@@ -118,7 +131,7 @@ export default function Home() {
                 {(user.role === 'sampler' || user.role === 'admin') && (
                   <Link
                     href="/field"
-                    className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     Sample
                   </Link>
@@ -128,13 +141,13 @@ export default function Home() {
                   <>
                     <Link
                       href="/admin/data"
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors hidden sm:inline-block"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                     >
                       <span className="hidden lg:inline">Manage </span>Data
                     </Link>
                     <Link
                       href="/admin/pathogens"
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors hidden sm:inline-block"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                     >
                       <span className="hidden lg:inline">Manage </span>Pathogens
                     </Link>
@@ -143,16 +156,15 @@ export default function Home() {
 
                 <button
                   onClick={handleLogout}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  <span className="hidden sm:inline">Logout</span>
-                  <span className="sm:hidden">Exit</span>
+                  Logout
                 </button>
               </>
             ) : (
               <Link
                 href="/login"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Login
               </Link>
@@ -160,6 +172,128 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Menu Panel */}
+          <div className="md:hidden fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white z-50 shadow-xl flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-black">Menu</h2>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1 hover:bg-gray-200 rounded text-gray-900 font-bold text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content - scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Sample Button at top */}
+              {user && (user.role === 'sampler' || user.role === 'admin') && (
+                <div>
+                  <Link
+                    href="/field"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md text-base font-medium text-center transition-colors"
+                  >
+                    📍 Sample
+                  </Link>
+                </div>
+              )}
+
+              {/* Year Selection */}
+              <div>
+                <label className="block text-sm font-bold mb-2 text-black">Year</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => onYearChange(Number(e.target.value))}
+                  className="w-full p-2 border border-gray-300 rounded-md text-gray-900 font-medium text-sm"
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Pathogen Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold text-black">Pathogens</label>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={handleSelectAll}
+                      className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 font-medium"
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={handleClearAll}
+                      className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded hover:bg-gray-200 font-medium"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {availablePathogens.map(pathogen => (
+                    <label key={pathogen} className="flex items-start gap-2 text-xs cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={selectedPathogens.includes(pathogen)}
+                        onChange={() => handlePathogenToggle(pathogen)}
+                        className="mt-1 rounded"
+                      />
+                      <span className="flex-1 font-medium text-gray-900">{pathogen}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Admin links at bottom */}
+            {user && user.role === 'admin' && (
+              <div className="p-4 border-t bg-gray-50 space-y-2">
+                <Link
+                  href="/admin/data"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
+                >
+                  Manage Data
+                </Link>
+                <Link
+                  href="/admin/pathogens"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
+                >
+                  Manage Pathogens
+                </Link>
+              </div>
+            )}
+
+            {/* Logout button */}
+            {user && (
+              <div className="p-4 border-t">
+                <button
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex">
