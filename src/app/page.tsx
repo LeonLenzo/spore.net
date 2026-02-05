@@ -215,7 +215,7 @@ export default function Home() {
                 <label className="block text-sm font-bold mb-2 text-black">Year</label>
                 <select
                   value={selectedYear}
-                  onChange={(e) => onYearChange(Number(e.target.value))}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
                   className="w-full p-2 border border-gray-300 rounded-md text-gray-900 font-medium text-sm"
                 >
                   {availableYears.map(year => (
