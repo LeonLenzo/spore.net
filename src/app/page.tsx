@@ -93,9 +93,9 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col relative">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b px-3 sm:px-6 py-3 sm:py-4">
+      <header className="bg-white shadow-sm border-b px-3 sm:px-6 py-3 sm:py-4 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Hamburger menu button - all screens */}
@@ -146,18 +146,17 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Menu Overlay - renders on top */}
+      {/* Menu Overlay - portal style at top level */}
       {mobileMenuOpen && (
-        <>
-          {/* Backdrop - positioned to not cover header */}
+        <div className="fixed inset-0 z-[9999]">
+          {/* Backdrop */}
           <div
-            className="fixed left-0 right-0 bottom-0 top-0 bg-black bg-opacity-30 z-[100]"
-            style={{ pointerEvents: 'auto' }}
+            className="absolute inset-0 bg-black/30"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Menu Panel */}
-          <div className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white bg-opacity-95 backdrop-blur-md z-[110] shadow-2xl flex flex-col">
+          <div className="absolute inset-y-0 left-0 w-[85vw] max-w-sm bg-white/95 backdrop-blur-md shadow-2xl flex flex-col">
             {/* Header */}
             <div className="p-4 border-b bg-gray-50 bg-opacity-90 flex items-center justify-between">
               <h2 className="text-lg font-bold text-black">Menu</h2>

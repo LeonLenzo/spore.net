@@ -35,7 +35,7 @@ export default function SampleDetails({ sample, onClose }: SampleDetailsProps) {
   );
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-96 max-w-[50vw] bg-white bg-opacity-95 backdrop-blur-sm shadow-xl z-50 overflow-y-auto">
+    <div className="absolute inset-y-0 right-0 w-full sm:w-96 max-w-[50vw] bg-white/95 backdrop-blur-md shadow-xl overflow-y-auto">
       <div className="p-3 sm:p-4 border-b bg-gray-50 bg-opacity-90">
         <div className="flex items-center justify-between">
           <h2 className="text-base sm:text-xl font-bold text-black">Sample Details</h2>
