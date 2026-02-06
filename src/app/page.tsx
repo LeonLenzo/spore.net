@@ -126,7 +126,27 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Menu Overlay */}
+      {/* Main Content */}
+      <div className="flex-1 flex">
+        <div className="flex-1 relative">
+          <PathogenMap
+            selectedYear={selectedYear}
+            selectedPathogens={selectedPathogens}
+            onSampleSelect={setSelectedSample}
+            samples={allSamples}
+            selectedSample={selectedSample}
+          />
+
+          {selectedSample && (
+            <SampleDetails
+              sample={selectedSample}
+              onClose={() => setSelectedSample(null)}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Menu Overlay - renders on top */}
       {mobileMenuOpen && (
         <>
           {/* Backdrop */}
@@ -247,26 +267,6 @@ export default function Home() {
           </div>
         </>
       )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex">
-        <div className="flex-1 relative">
-          <PathogenMap
-            selectedYear={selectedYear}
-            selectedPathogens={selectedPathogens}
-            onSampleSelect={setSelectedSample}
-            samples={allSamples}
-            selectedSample={selectedSample}
-          />
-
-          {selectedSample && (
-            <SampleDetails
-              sample={selectedSample}
-              onClose={() => setSelectedSample(null)}
-            />
-          )}
-        </div>
-      </div>
 
     </div>
   );
