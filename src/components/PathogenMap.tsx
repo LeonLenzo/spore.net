@@ -119,7 +119,6 @@ export default function PathogenMap({ selectedYear, selectedPathogens, onSampleS
         center={[-30.5, 118.5]} // Centered on WA wheat belt
         zoom={6}
         style={{ height: '100%', width: '100%' }}
-        className="z-0"
       >
         <TileLayer
           attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
