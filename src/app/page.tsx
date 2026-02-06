@@ -156,9 +156,9 @@ export default function Home() {
           />
 
           {/* Menu Panel */}
-          <div className="absolute inset-y-0 left-0 w-[85vw] max-w-sm bg-white/95 backdrop-blur-md shadow-2xl flex flex-col">
+          <div className="absolute inset-y-0 left-0 w-[85vw] max-w-sm bg-white/30 backdrop-blur-md shadow-2xl flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b bg-gray-50 bg-opacity-90 flex items-center justify-between">
+            <div className="p-4 border-b bg-white/20 flex items-center justify-between">
               <h2 className="text-lg font-bold text-black">Menu</h2>
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -235,7 +235,7 @@ export default function Home() {
 
             {/* Admin links at bottom */}
             {user && user.role === 'admin' && (
-              <div className="p-4 border-t bg-gray-50 bg-opacity-90 space-y-2">
+              <div className="p-4 border-t bg-white/20 space-y-2">
                 <Link
                   href="/admin/data"
                   onClick={() => setMobileMenuOpen(false)}
@@ -253,19 +253,27 @@ export default function Home() {
               </div>
             )}
 
-            {/* Logout button */}
-            {user && (
-              <div className="p-4 border-t">
+            {/* Logout or Login button */}
+            <div className="p-4 border-t">
+              {user ? (
                 <button
                   onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                   className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Logout
                 </button>
-              </div>
-            )}
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
           </div>
-        </>
+        </div>
       )}
 
     </div>
