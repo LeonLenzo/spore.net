@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import ControlPanel from '@/components/ControlPanel';
 import SampleDetails from '@/components/SampleDetails';
 import { Sample } from '@/data/sampleData';
 import { fetchSamples, fetchUniqueYears, fetchUniquePathogens } from '@/lib/dataService';
@@ -99,10 +98,10 @@ export default function Home() {
       <header className="bg-white shadow-sm border-b px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Hamburger menu button - mobile only */}
+            {/* Hamburger menu button - all screens */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-md text-gray-900"
+              className="p-2 hover:bg-gray-100 rounded-md text-gray-900"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -115,75 +114,29 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <>
-                {/* Show user info */}
-                <div className="text-right mr-2">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user.fullName || user.email}
-                  </p>
-                  <p className="text-xs text-gray-600 capitalize">{user.role}</p>
-                </div>
-
-                {/* Role-based navigation buttons */}
-                {(user.role === 'sampler' || user.role === 'admin') && (
-                  <Link
-                    href="/field"
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    Sample
-                  </Link>
-                )}
-
-                {user.role === 'admin' && (
-                  <>
-                    <Link
-                      href="/admin/data"
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      <span className="hidden lg:inline">Manage </span>Data
-                    </Link>
-                    <Link
-                      href="/admin/pathogens"
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      <span className="hidden lg:inline">Manage </span>Pathogens
-                    </Link>
-                  </>
-                )}
-
-                <button
-                  onClick={handleLogout}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/login"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Login
-              </Link>
-            )}
-          </div>
+          {/* User info on desktop only */}
+          {user && (
+            <div className="hidden md:block text-right">
+              <p className="text-sm font-medium text-gray-900">
+                {user.fullName || user.email}
+              </p>
+              <p className="text-xs text-gray-600 capitalize">{user.role}</p>
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Menu Overlay */}
       {mobileMenuOpen && (
         <>
           {/* Backdrop */}
           <div
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Menu Panel */}
-          <div className="md:hidden fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white z-50 shadow-xl flex flex-col">
+          <div className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white z-50 shadow-xl flex flex-col">
             {/* Header */}
             <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
               <h2 className="text-lg font-bold text-black">Menu</h2>
@@ -296,19 +249,7 @@ export default function Home() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex">
-        <ControlPanel
-          selectedYear={selectedYear}
-          selectedPathogens={selectedPathogens}
-          availableYears={availableYears}
-          availablePathogens={availablePathogens}
-          onYearChange={setSelectedYear}
-          onPathogenToggle={handlePathogenToggle}
-          onClearAll={handleClearAll}
-          onSelectAll={handleSelectAll}
-        />
-
-        <div className="flex-1 relative">
+      <div className="flex-1 flex relative">
           <PathogenMap
             selectedYear={selectedYear}
             selectedPathogens={selectedPathogens}
