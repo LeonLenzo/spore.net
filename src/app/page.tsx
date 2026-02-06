@@ -249,7 +249,8 @@ export default function Home() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex relative">
+      <div className="flex-1 flex">
+        <div className="flex-1 relative">
           <PathogenMap
             selectedYear={selectedYear}
             selectedPathogens={selectedPathogens}
