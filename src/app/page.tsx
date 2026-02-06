@@ -131,12 +131,12 @@ export default function Home() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-30 z-40"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Menu Panel */}
-          <div className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white z-50 shadow-xl flex flex-col">
+          <div className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white bg-opacity-95 backdrop-blur-sm z-50 shadow-xl flex flex-col">
             {/* Header */}
             <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
               <h2 className="text-lg font-bold text-black">Menu</h2>

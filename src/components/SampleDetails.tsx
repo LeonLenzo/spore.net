@@ -120,11 +120,8 @@ export default function SampleDetails({ sample, onClose }: SampleDetailsProps) {
                         <div className="mb-1">
                           <span className="font-semibold text-gray-900">Category:</span> <span className="font-medium">{info.category}</span>
                         </div>
-                        <div className="mb-1">
-                          <span className="font-semibold text-gray-900">Crops Affected:</span> <span className="font-medium">{info.cropAffected.join(', ')}</span>
-                        </div>
                         <div>
-                          <span className="font-semibold text-gray-900">Description:</span> <span className="font-medium">{info.description}</span>
+                          <span className="font-semibold text-gray-900">Crops Affected:</span> <span className="font-medium">{info.cropAffected.join(', ')}</span>
                         </div>
                       </div>
                     )}
