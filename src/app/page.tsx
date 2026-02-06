@@ -151,14 +151,14 @@ export default function Home() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+            className="fixed inset-0 bg-black bg-opacity-30 z-[100]"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Menu Panel */}
-          <div className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white bg-opacity-95 backdrop-blur-sm z-50 shadow-xl flex flex-col">
+          <div className="fixed inset-y-0 left-0 w-[85vw] max-w-sm bg-white bg-opacity-95 backdrop-blur-md z-[110] shadow-2xl flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+            <div className="p-4 border-b bg-gray-50 bg-opacity-90 flex items-center justify-between">
               <h2 className="text-lg font-bold text-black">Menu</h2>
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -235,7 +235,7 @@ export default function Home() {
 
             {/* Admin links at bottom */}
             {user && user.role === 'admin' && (
-              <div className="p-4 border-t bg-gray-50 space-y-2">
+              <div className="p-4 border-t bg-gray-50 bg-opacity-90 space-y-2">
                 <Link
                   href="/admin/data"
                   onClick={() => setMobileMenuOpen(false)}
