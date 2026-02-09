@@ -18,6 +18,7 @@ L.Icon.Default.mergeOptions({
 interface PathogenMapProps {
   selectedYear: number;
   selectedPathogens: string[];
+  selectedDiseaseTypes?: string[];
   onSampleSelect: (sample: Sample | null) => void;
   samples?: Sample[];
   selectedSample?: Sample | null;
@@ -96,7 +97,7 @@ function createPathogenCircles(sample: Sample, selectedPathogens: string[], sele
 }
 
 
-export default function PathogenMap({ selectedYear, selectedPathogens, onSampleSelect, samples: propSamples, selectedSample }: PathogenMapProps) {
+export default function PathogenMap({ selectedYear, selectedPathogens, selectedDiseaseTypes, onSampleSelect, samples: propSamples, selectedSample }: PathogenMapProps) {
   const samplesData = propSamples || [];
 
   const handleSampleClick = (sample: Sample) => {
@@ -105,11 +106,39 @@ export default function PathogenMap({ selectedYear, selectedPathogens, onSampleS
   };
 
   // Calculate everything in render instead of useEffect to ensure immediate updates
-  const filteredSamples = samplesData.filter(sample => sample.year === selectedYear);
+  let filteredSamples = samplesData.filter(sample => sample.year === selectedYear);
+
+  // Filter pathogens by disease type
+  const getPathogenCategory = (species: string): string => {
+    const speciesLower = species.toLowerCase();
+    if (speciesLower.includes('puccinia')) return 'Rust';
+    if (speciesLower.includes('fusarium')) return 'Fusarium';
+    if (speciesLower.includes('septoria') || speciesLower.includes('pyrenophora') || speciesLower.includes('rhynchosporium')) return 'Leaf Spot';
+    return 'Unknown';
+  };
+
+  // Create filtered pathogen list based on disease types
+  const filteredPathogenSpecies: string[] = [];
+  if (selectedDiseaseTypes && selectedDiseaseTypes.length > 0) {
+    // Get all pathogen species that match the selected disease types
+    filteredSamples.forEach(sample => {
+      sample.pathogens.forEach(pathogen => {
+        const category = getPathogenCategory(pathogen.species);
+        if (selectedDiseaseTypes.includes(category) && !filteredPathogenSpecies.includes(pathogen.species)) {
+          filteredPathogenSpecies.push(pathogen.species);
+        }
+      });
+    });
+  }
+
+  // Combine selected individual pathogens with disease type filtered pathogens
+  const combinedPathogenFilter = selectedPathogens.length > 0
+    ? selectedPathogens
+    : filteredPathogenSpecies;
 
   const allPathogenCircles: PathogenCircle[] = [];
   filteredSamples.forEach(sample => {
-    const sampleCircles = createPathogenCircles(sample, selectedPathogens, selectedSample || null);
+    const sampleCircles = createPathogenCircles(sample, combinedPathogenFilter, selectedSample || null);
     allPathogenCircles.push(...sampleCircles);
   });
 

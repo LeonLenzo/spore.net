@@ -127,7 +127,7 @@ export default function Login() {
               href="/"
               className="text-blue-600 hover:text-blue-500 text-sm font-medium"
             >
-              ← Back to Map
+              ← Home
             </Link>
           </div>
         </div>

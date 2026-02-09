@@ -32,12 +32,16 @@ interface SavedSession {
   currentPosition: GPSPosition | null;
   trackingPoints: GPSPosition[];
   startTime: number;
+  startLocationName?: string;
+  endLocationName?: string;
 }
 
-export default function FieldCollectionPage() {
+export default function CollectTab() {
   const router = useRouter();
   const [status, setStatus] = useState<CollectionStatus>('idle');
   const [sampleId, setSampleId] = useState('');
+  const [startLocationName, setStartLocationName] = useState('');
+  const [endLocationName, setEndLocationName] = useState('');
   const [currentPosition, setCurrentPosition] = useState<GPSPosition | null>(null);
   const [startPosition, setStartPosition] = useState<GPSPosition | null>(null);
   const [trackingPoints, setTrackingPoints] = useState<GPSPosition[]>([]);
@@ -51,23 +55,45 @@ export default function FieldCollectionPage() {
   // Get current user
   const user = AuthService.getCurrentUser();
 
-  // Recover session on mount
+  // Recover session on mount - but only if explicitly in recording state
   useEffect(() => {
     const savedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (savedSession) {
       try {
         const session: SavedSession = JSON.parse(savedSession);
-        if (session.status === 'recording') {
-          setSampleId(session.sampleId);
-          setStartPosition(session.startPosition);
-          setCurrentPosition(session.currentPosition);
-          setTrackingPoints(session.trackingPoints);
-          setStatus('recording');
-          setSessionRecovered(true);
-          console.log('Session recovered:', session.sampleId);
+        // Only recover if it's an active recording session with valid data
+        if (
+          session.status === 'recording' &&
+          session.sampleId?.trim() &&
+          session.trackingPoints.length > 0
+        ) {
+          // Ask user if they want to continue
+          const shouldRecover = confirm(
+            `You have an active sampling session for "${session.sampleId}" with ${session.trackingPoints.length} GPS points. Do you want to continue this session?`
+          );
+
+          if (shouldRecover) {
+            setSampleId(session.sampleId);
+            setStartLocationName(session.startLocationName || '');
+            setEndLocationName(session.endLocationName || '');
+            setStatus('recording');
+            setStartPosition(session.startPosition);
+            setCurrentPosition(session.currentPosition);
+            setTrackingPoints(session.trackingPoints);
+            setSessionRecovered(true);
+            console.log('Session recovered:', session.trackingPoints.length, 'points');
+          } else {
+            // User chose not to continue - clear the session
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+          }
+        } else {
+          // Not a valid recording session - clear it
+          console.log('Clearing invalid session:', session);
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
       } catch (e) {
         console.error('Failed to recover session:', e);
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
       }
     }
   }, []);
@@ -82,7 +108,9 @@ export default function FieldCollectionPage() {
           startPosition,
           currentPosition,
           trackingPoints,
-          startTime: Date.now()
+          startTime: Date.now(),
+          startLocationName,
+          endLocationName
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(session));
         console.log(`Session saved: ${trackingPoints.length} points`);
@@ -100,7 +128,7 @@ export default function FieldCollectionPage() {
         }
       };
     }
-  }, [status, sampleId, startPosition, currentPosition, trackingPoints]);
+  }, [status, sampleId, startPosition, currentPosition, trackingPoints, startLocationName, endLocationName]);
 
   // Start GPS tracking with background support
   useEffect(() => {
@@ -179,14 +207,14 @@ export default function FieldCollectionPage() {
     }
   }, [status, useManualEntry, sampleId, startPosition]);
 
-  const handleStartSample = () => {
-    setStatus('confirming');
-    setError('');
-  };
-
-  const handleConfirmStart = async () => {
+  const handleStartSample = async () => {
     if (!sampleId.trim()) {
       setError('Please enter a sample ID');
+      return;
+    }
+
+    if (!startLocationName.trim()) {
+      setError('Please enter a start location name');
       return;
     }
 
@@ -202,7 +230,7 @@ export default function FieldCollectionPage() {
       return;
     }
 
-    // Try to get initial GPS position
+    // Try to get initial GPS position and start recording immediately
     if (navigator.geolocation && !useManualEntry) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -215,18 +243,30 @@ export default function FieldCollectionPage() {
           setStartPosition(pos);
           setCurrentPosition(pos);
           setTrackingPoints([pos]);
-          setStatus('recording');
+          setStatus('recording'); // Start recording immediately
+          setError('');
         },
         (error) => {
           console.error('GPS error:', error);
-          setGpsError(`Could not get GPS: ${error.message}`);
+          let errorMessage = 'Could not get GPS location. ';
+          if (error.code === 1) {
+            errorMessage += 'Location permission denied.';
+          } else if (error.code === 2) {
+            errorMessage += 'Location unavailable.';
+          } else if (error.code === 3) {
+            errorMessage += 'Location request timed out.';
+          } else {
+            errorMessage += error.message || 'Unknown error.';
+          }
+          setGpsError(errorMessage + ' Using manual entry mode.');
           setUseManualEntry(true);
           setStatus('recording');
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } else {
-      setStatus('recording');
+      setStatus('recording'); // Start recording immediately even with manual entry
+      setError('');
     }
   };
 
@@ -251,6 +291,12 @@ export default function FieldCollectionPage() {
       return;
     }
 
+    if (!endLocationName.trim()) {
+      setError('Please enter an end location name');
+      setStatus('recording');
+      return;
+    }
+
     setStatus('saving');
 
     try {
@@ -262,6 +308,8 @@ export default function FieldCollectionPage() {
         },
         body: JSON.stringify({
           sampleId,
+          startLocationName,
+          endLocationName,
           startPosition,
           currentPosition,
           trackingPoints,
@@ -281,11 +329,13 @@ export default function FieldCollectionPage() {
       // Reset and redirect
       alert(`Sample ${sampleId} saved successfully! ${trackingPoints.length} GPS points recorded.`);
       setSampleId('');
+      setStartLocationName('');
+      setEndLocationName('');
       setStartPosition(null);
       setCurrentPosition(null);
       setTrackingPoints([]);
       setStatus('idle');
-      router.push('/data');
+      // Stay on the Collect tab, don't redirect
     } catch (err: any) {
       console.error('Error saving sample:', err);
       setError(err.message || 'Failed to save sample. Please try again. Data is saved locally.');
@@ -312,36 +362,45 @@ export default function FieldCollectionPage() {
   };
 
   return (
-    <RoleGuard requiredRole="sampler">
-      <div className="h-screen flex flex-col bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
-              <h1 className="text-2xl font-bold text-gray-900">spore.net</h1>
-              <p className="text-gray-700 text-sm font-medium">Field Collection</p>
-            </Link>
-            <div className="flex items-center gap-3">
-              {status === 'idle' && (
+        <div className="h-full flex flex-col overflow-hidden bg-gray-50">
+          {/* Start Sampling Form - Only show in idle state */}
+          {status === 'idle' && (
+            <div className="bg-white border-b px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sample ID *</label>
+                  <input
+                    type="text"
+                    value={sampleId}
+                    onChange={(e) => setSampleId(e.target.value)}
+                    placeholder="e.g., 25_01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Location *</label>
+                  <input
+                    type="text"
+                    value={startLocationName}
+                    onChange={(e) => setStartLocationName(e.target.value)}
+                    placeholder="e.g., Lake Grace"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                  />
+                </div>
                 <button
                   onClick={handleStartSample}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  disabled={!sampleId.trim() || !startLocationName.trim()}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Start Sampling
+                  Start Recording
                 </button>
-              )}
-              <Link
-                href="/"
-                className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center"
-              >
-                Home
-              </Link>
+              </div>
+              {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             </div>
-          </div>
-        </header>
+          )}
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Map View */}
           <div className="flex-1 relative min-h-[50vh] lg:min-h-0">
             <FieldMap
@@ -509,6 +568,23 @@ export default function FieldCollectionPage() {
                   </div>
                 )}
 
+                {/* End Location Input */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    End Location *
+                  </label>
+                  <input
+                    type="text"
+                    value={endLocationName}
+                    onChange={(e) => setEndLocationName(e.target.value)}
+                    placeholder="e.g., Kondinin"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Enter end location before finishing
+                  </p>
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleCancel}
@@ -518,7 +594,7 @@ export default function FieldCollectionPage() {
                   </button>
                   <button
                     onClick={handleEndSample}
-                    disabled={!startPosition || !currentPosition}
+                    disabled={!startPosition || !currentPosition || !endLocationName.trim()}
                     className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     End Sample
@@ -535,7 +611,6 @@ export default function FieldCollectionPage() {
             )}
           </div>
         </div>
-      </div>
-    </RoleGuard>
+        </div>
   );
 }

@@ -194,8 +194,8 @@ export default function PathogenManagement() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div className="flex items-center">
-                <Link href="/admin" className="text-blue-600 hover:text-blue-700 mr-4">
-                  ← Back to Admin
+                <Link href="/" className="text-blue-600 hover:text-blue-700 mr-4">
+                  ← Home
                 </Link>
                 <h1 className="text-3xl font-bold text-gray-900">Pathogen Species Management</h1>
               </div>
