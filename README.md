@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# spore.net
 
-## Getting Started
+**Crop Diseases and Where to Find Them**
 
-First, run the development server:
+A real-time pathogen monitoring and mapping platform for tracking crop diseases across Western Australia's wheat belt.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Overview
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+spore.net is a web application designed to help researchers and agricultural professionals monitor, track, and visualize plant pathogen distributions across agricultural regions. The platform combines GPS-based field sampling with environmental DNA (eDNA) metabarcoding data to create an interactive map of pathogen detections.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🗺️ Interactive Pathogen Map
+- Real-time visualization of pathogen detection sites across the WA wheat belt
+- Color-coded pathogen circles showing species distribution and severity
+- Filter by year, individual pathogen species, or disease type categories
+- Click on samples to view detailed pathogen composition and metadata
 
-## Learn More
+### 📍 Field Sample Collection
+- GPS-enabled route tracking for field sampling
+- Record start and end locations with automatic coordinate capture
+- Real-time GPS tracking during sample collection
+- Session recovery for interrupted sampling
+- Local storage backup to prevent data loss
 
-To learn more about Next.js, take a look at the following resources:
+### 📊 Data Management
+- Upload metabarcoding results via CSV
+- View and manage sampling routes with interactive map visualization
+- Track pathogen detections with read counts for each sample
+- Delete and manage historical data
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 🔬 Pathogen Categories
+- **Rust Diseases**: Stripe rust, Stem rust, Leaf rust (*Puccinia* spp.)
+- **Fusarium**: Crown rot, Head blight (*Fusarium* spp.)
+- **Leaf Spot Diseases**: Tan spot, Septoria leaf blotch, Scald
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## User Roles
 
-## Deploy on Vercel
+- **Sampler**: Can collect field samples and view the map
+- **Admin**: Full access including pathogen data management and uploads
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Technology Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend**: Next.js 16 with React, TypeScript, Tailwind CSS
+- **Mapping**: Leaflet with CARTO light basemap tiles
+- **Database**: Supabase (PostgreSQL) with Row Level Security
+- **Deployment**: Vercel
+- **Authentication**: Custom JWT-based system
+
+## Live Site
+
+Visit [spore.net](https://spore.net) to access the application.
+
+## About
+
+This platform is part of ongoing research into crop disease surveillance using environmental DNA techniques in Western Australian agricultural systems.

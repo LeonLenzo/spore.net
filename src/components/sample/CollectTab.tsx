@@ -499,7 +499,7 @@ export default function CollectTab() {
                     Cancel
                   </button>
                   <button
-                    onClick={handleConfirmStart}
+                    onClick={handleStartSample}
                     className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
                   >
                     Start Recording
