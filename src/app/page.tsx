@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SampleDetails from '@/components/SampleDetails';
+import RoleSwitcher from '@/components/RoleSwitcher';
 import { Sample, pathogens } from '@/data/sampleData';
 import { fetchSamples, fetchUniqueYears, fetchUniquePathogens } from '@/lib/dataService';
 import { AuthService } from '@/lib/auth';
@@ -21,12 +22,24 @@ export default function Home() {
   const [selectedPathogens, setSelectedPathogens] = useState<string[]>([]);
   const [selectedDiseaseTypes, setSelectedDiseaseTypes] = useState<string[]>(['Rust', 'Fusarium', 'Leaf Spot']);
   const [selectedSample, setSelectedSample] = useState<Sample | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | undefined>(undefined);
   const [allSamples, setAllSamples] = useState<Sample[]>([]);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [availablePathogens, setAvailablePathogens] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(AuthService.getCurrentUser());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [viewAsRole, setViewAsRole] = useState<string | null>(null);
+
+  const handleSampleSelect = (sample: Sample | null, position?: { x: number; y: number }) => {
+    setSelectedSample(sample);
+    setTooltipPosition(position);
+  };
+
+  // Effective user for display purposes (considers view-as override)
+  const effectiveUser = viewAsRole
+    ? (viewAsRole === 'public' ? null : { ...user, role: viewAsRole })
+    : user;
 
   // Load initial data
   useEffect(() => {
@@ -132,15 +145,10 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* User info on desktop only */}
-          {user && (
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-gray-900">
-                {user.fullName || user.email}
-              </p>
-              <p className="text-xs text-gray-600 capitalize">{user.role}</p>
-            </div>
-          )}
+          {/* User info and role switcher on desktop only */}
+          <div className="hidden md:block">
+            <RoleSwitcher onRoleChange={setViewAsRole} />
+          </div>
         </div>
       </header>
 
@@ -151,7 +159,7 @@ export default function Home() {
             selectedYear={selectedYear}
             selectedPathogens={selectedPathogens}
             selectedDiseaseTypes={selectedDiseaseTypes}
-            onSampleSelect={setSelectedSample}
+            onSampleSelect={handleSampleSelect}
             samples={allSamples}
             selectedSample={selectedSample}
           />
@@ -160,6 +168,7 @@ export default function Home() {
             <SampleDetails
               sample={selectedSample}
               onClose={() => setSelectedSample(null)}
+              position={tooltipPosition}
             />
           )}
         </div>
@@ -221,7 +230,7 @@ export default function Home() {
             {/* Content - scrollable */}
             <div className="flex-1 overflow-y-auto px-3 space-y-3">
               {/* Sample Button */}
-              {user && (user.role === 'sampler' || user.role === 'admin') && (
+              {effectiveUser && (effectiveUser.role === 'sampler' || effectiveUser.role === 'admin') && (
                 <div className="bg-white rounded-lg p-3 shadow-md">
                   <Link
                     href="/sample"
@@ -293,8 +302,15 @@ export default function Home() {
               </div>
 
               {/* Admin links Card */}
-              {user && user.role === 'admin' && (
+              {effectiveUser && effectiveUser.role === 'admin' && (
                 <div className="bg-white rounded-lg p-3 shadow-md space-y-2">
+                  <Link
+                    href="/users"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center transition-colors"
+                  >
+                    Manage Users
+                  </Link>
                   <Link
                     href="/pathogens"
                     onClick={() => setMobileMenuOpen(false)}

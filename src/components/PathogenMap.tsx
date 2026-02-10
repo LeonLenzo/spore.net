@@ -19,7 +19,7 @@ interface PathogenMapProps {
   selectedYear: number;
   selectedPathogens: string[];
   selectedDiseaseTypes?: string[];
-  onSampleSelect: (sample: Sample | null) => void;
+  onSampleSelect: (sample: Sample | null, position?: { x: number; y: number }) => void;
   samples?: Sample[];
   selectedSample?: Sample | null;
 }
@@ -100,9 +100,10 @@ function createPathogenCircles(sample: Sample, selectedPathogens: string[], sele
 export default function PathogenMap({ selectedYear, selectedPathogens, selectedDiseaseTypes, onSampleSelect, samples: propSamples, selectedSample }: PathogenMapProps) {
   const samplesData = propSamples || [];
 
-  const handleSampleClick = (sample: Sample) => {
+  const handleSampleClick = (sample: Sample, e: L.LeafletMouseEvent) => {
     const newSelection = selectedSample?.id === sample.id ? null : sample;
-    onSampleSelect(newSelection);
+    const position = newSelection ? { x: e.containerPoint.x, y: e.containerPoint.y } : undefined;
+    onSampleSelect(newSelection, position);
   };
 
   // Calculate everything in render instead of useEffect to ensure immediate updates
@@ -166,7 +167,7 @@ export default function PathogenMap({ selectedYear, selectedPathogens, selectedD
             fillOpacity={circle.opacity}
             opacity={circle.opacity === 0 ? 0.8 : circle.opacity + 0.2} // Clearer border for hollow circles
             eventHandlers={{
-              click: () => handleSampleClick(circle.sample),
+              click: (e) => handleSampleClick(circle.sample, e),
             }}
           />
         ))}

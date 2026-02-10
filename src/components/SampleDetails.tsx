@@ -1,170 +1,133 @@
 'use client';
 
 import { Sample, pathogens } from '@/data/sampleData';
+import Link from 'next/link';
+import { AuthService } from '@/lib/auth';
 
 interface SampleDetailsProps {
   sample: Sample | null;
   onClose: () => void;
+  position?: { x: number; y: number };
 }
 
-export default function SampleDetails({ sample, onClose }: SampleDetailsProps) {
+export default function SampleDetails({ sample, onClose, position }: SampleDetailsProps) {
   if (!sample) return null;
 
-  const getPathogenInfo = (species: string) => {
-    return pathogens.find(p => p.species === species);
+  const getPathogenCategory = (species: string): string => {
+    const speciesLower = species.toLowerCase();
+    if (speciesLower.includes('puccinia')) return 'Rust';
+    if (speciesLower.includes('fusarium')) return 'Fusarium';
+    if (speciesLower.includes('septoria') || speciesLower.includes('pyrenophora') || speciesLower.includes('rhynchosporium')) return 'Leaf Spot';
+    return 'Unknown';
   };
 
-  // Calculate distance between start and end coordinates using Haversine formula
-  const calculateTransectDistance = (startLat: number, startLng: number, endLat: number, endLng: number): number => {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (endLat - startLat) * Math.PI / 180;
-    const dLng = (endLng - startLng) * Math.PI / 180;
-    const a =
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(startLat * Math.PI / 180) * Math.cos(endLat * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; // Distance in kilometers
+  // Group pathogens by category
+  const pathogensByCategory = sample.pathogens.reduce((acc, pathogen) => {
+    const category = getPathogenCategory(pathogen.species);
+    if (!acc[category]) {
+      acc[category] = { count: 0, totalReads: 0, species: [] };
+    }
+    acc[category].count++;
+    acc[category].totalReads += pathogen.readCount;
+    acc[category].species.push(pathogen.species);
+    return acc;
+  }, {} as Record<string, { count: number; totalReads: number; species: string[] }>);
+
+  const categoryColors: Record<string, string> = {
+    'Rust': 'bg-orange-100 text-orange-800',
+    'Fusarium': 'bg-purple-100 text-purple-800',
+    'Leaf Spot': 'bg-green-100 text-green-800',
+    'Unknown': 'bg-gray-100 text-gray-800'
   };
 
-  const transectDistance = calculateTransectDistance(
-    sample.startLatitude,
-    sample.startLongitude,
-    sample.endLatitude,
-    sample.endLongitude
-  );
+  // Calculate positioning
+  let positionStyle: React.CSSProperties = {};
+  if (position) {
+    const tooltipWidth = 320;
+    const tooltipHeight = 250;
+    const padding = 16;
+
+    // Try to position to the right of the marker
+    let left = position.x + padding;
+    let top = position.y - tooltipHeight / 2;
+
+    // If it would go off the right edge, position to the left
+    if (left + tooltipWidth > window.innerWidth - padding) {
+      left = position.x - tooltipWidth - padding;
+    }
+
+    // If it would go off the left edge, center horizontally
+    if (left < padding) {
+      left = Math.max(padding, Math.min(window.innerWidth - tooltipWidth - padding, position.x - tooltipWidth / 2));
+    }
+
+    // Keep it within vertical bounds
+    top = Math.max(padding, Math.min(window.innerHeight - tooltipHeight - padding, top));
+
+    positionStyle = {
+      position: 'fixed',
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${tooltipWidth}px`
+    };
+  } else {
+    // Fallback position (top right)
+    positionStyle = {
+      position: 'fixed',
+      top: '1rem',
+      right: '1rem',
+      width: '20rem',
+      maxWidth: 'calc(100vw - 2rem)'
+    };
+  }
 
   return (
-    <div className="fixed top-0 bottom-0 right-0 w-full sm:w-96 sm:max-w-[50vw] bg-white/30 backdrop-blur-md shadow-xl flex flex-col z-[10000] mt-[60px]">
-      {/* Header Card */}
-      <div className="mx-3 mt-3 mb-2">
-        <div className="bg-white rounded-lg p-4 shadow-md flex items-center justify-between">
-          <h2 className="text-base sm:text-xl font-bold text-gray-900">Sample Details</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded text-gray-900 font-bold text-xl"
-          >
-            ×
-          </button>
-        </div>
+    <div className="bg-white rounded-lg shadow-xl z-[10000] border-2 border-gray-200" style={positionStyle}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b bg-gray-50 rounded-t-lg">
+        <h3 className="font-bold text-gray-900 text-sm">{sample.id}</h3>
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-gray-200 rounded text-gray-600 font-bold text-lg"
+        >
+          ×
+        </button>
       </div>
 
-      {/* Content - scrollable */}
-      <div className="flex-1 overflow-y-auto px-3 space-y-3 pb-3">
-        {/* Sample Info Card */}
-        <div className="bg-white rounded-lg p-3 shadow-md">
-          <h3 className="text-lg font-bold mb-3 text-gray-900">{sample.location}</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="font-medium text-gray-900">Sample ID:</span>
-              <div className="text-gray-700">{sample.id}</div>
-            </div>
-            <div>
-              <span className="font-medium text-gray-900">Collection Date:</span>
-              <div className="text-gray-700">{sample.collectionDate}</div>
-            </div>
-            <div>
-              <span className="font-medium text-gray-900">Season:</span>
-              <div className="text-gray-700">{sample.season}</div>
-            </div>
-            <div>
-              <span className="font-medium text-gray-900">Year:</span>
-              <div className="text-gray-700">{sample.year}</div>
-            </div>
-            <div className="col-span-2">
-              <span className="font-medium text-gray-900">Sampling Route:</span>
-              <div className="text-gray-700 space-y-1 mt-1">
-                <div>Start: {sample.startLatitude.toFixed(4)}, {sample.startLongitude.toFixed(4)}</div>
-                <div>End: {sample.endLatitude.toFixed(4)}, {sample.endLongitude.toFixed(4)}</div>
-                <div className="font-semibold text-gray-900 mt-1">
-                  Distance: {transectDistance.toFixed(1)} km
-                </div>
+      {/* Content */}
+      <div className="p-3 space-y-2">
+        {/* Location and Date */}
+        <div className="text-sm">
+          <div className="font-bold text-gray-900">{sample.location}</div>
+          <div className="text-gray-600">{sample.collectionDate}</div>
+        </div>
+
+        {/* Pathogen Categories */}
+        <div>
+          <h4 className="text-xs font-semibold text-gray-700 mb-1">Detected Pathogens</h4>
+          <div className="flex flex-wrap gap-1">
+            {Object.entries(pathogensByCategory).map(([category, data]) => (
+              <div
+                key={category}
+                className={`px-2 py-1 rounded text-xs font-semibold ${categoryColors[category]}`}
+                title={`${data.species.join(', ')}`}
+              >
+                {category} ({data.count})
               </div>
-            </div>
+            ))}
+          </div>
+          <div className="text-xs text-gray-600 mt-1">
+            Total reads: {sample.pathogens.reduce((sum, p) => sum + p.readCount, 0).toLocaleString()}
           </div>
         </div>
 
-        {/* Detected Pathogens Card */}
-        <div className="bg-white rounded-lg p-3 shadow-md">
-          <h4 className="font-bold mb-3 text-gray-900 text-base">Detected Pathogens ({sample.pathogens.length})</h4>
-          <div className="space-y-3">
-            {sample.pathogens
-              .sort((a, b) => b.relativeAbundance - a.relativeAbundance)
-              .map((pathogen, idx) => {
-                const info = getPathogenInfo(pathogen.species);
-                return (
-                  <div key={idx} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <div className="font-semibold text-gray-900">{pathogen.commonName}</div>
-                        <div className="text-sm text-gray-700 italic font-medium">{pathogen.species}</div>
-                      </div>
-                      <div className={`px-2 py-1 rounded text-xs font-semibold ${
-                        pathogen.severity === 'high' ? 'bg-red-100 text-red-800' :
-                        pathogen.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {pathogen.severity}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-sm mb-2">
-                      <div>
-                        <span className="text-gray-800 font-medium">Abundance:</span>
-                        <div className="font-semibold text-gray-900">{pathogen.relativeAbundance.toFixed(1)}%</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-800 font-medium">Read Count:</span>
-                        <div className="font-semibold text-gray-900">{pathogen.readCount.toLocaleString()}</div>
-                      </div>
-                    </div>
-
-                    {info && (
-                      <div className="text-sm text-gray-700">
-                        <div className="mb-1">
-                          <span className="font-semibold text-gray-900">Category:</span> <span className="font-medium">{info.category}</span>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-gray-900">Crops Affected:</span> <span className="font-medium">{info.cropAffected.join(', ')}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-
-        {/* Summary Statistics Card */}
-        <div className="bg-white rounded-lg p-3 shadow-md">
-          <h4 className="font-bold mb-3 text-gray-900 text-base">Summary Statistics</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 rounded-lg p-2">
-              <span className="text-xs text-gray-700 font-medium">Total Reads</span>
-              <div className="font-semibold text-gray-900 text-lg">
-                {sample.pathogens.reduce((sum, p) => sum + p.readCount, 0).toLocaleString()}
-              </div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-2">
-              <span className="text-xs text-gray-700 font-medium">Total Abundance</span>
-              <div className="font-semibold text-gray-900 text-lg">
-                {sample.pathogens.reduce((sum, p) => sum + p.relativeAbundance, 0).toFixed(1)}%
-              </div>
-            </div>
-            <div className="bg-red-50 rounded-lg p-2">
-              <span className="text-xs text-red-700 font-medium">High Severity</span>
-              <div className="font-semibold text-red-800 text-lg">
-                {sample.pathogens.filter(p => p.severity === 'high').length}
-              </div>
-            </div>
-            <div className="bg-yellow-50 rounded-lg p-2">
-              <span className="text-xs text-yellow-700 font-medium">Medium Severity</span>
-              <div className="font-semibold text-yellow-800 text-lg">
-                {sample.pathogens.filter(p => p.severity === 'medium').length}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Link to sample details - visible to all users */}
+        <Link
+          href={`/sample?id=${sample.id}`}
+          className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 px-3 rounded"
+        >
+          View Details
+        </Link>
       </div>
     </div>
   );

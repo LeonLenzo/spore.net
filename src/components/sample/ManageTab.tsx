@@ -43,7 +43,12 @@ interface PathogenSpecies {
   disease_type: string;
 }
 
-export default function ManageTab() {
+interface ManageTabProps {
+  readOnly?: boolean;
+  sampleId?: string;
+}
+
+export default function ManageTab({ readOnly = false, sampleId }: ManageTabProps) {
   const [routes, setRoutes] = useState<SamplingRoute[]>([]);
   const [pathogens, setPathogens] = useState<PathogenSpecies[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +78,17 @@ export default function ManageTab() {
     loadRoutes();
     loadPathogens();
   }, []);
+
+  // Auto-select route if sampleId is provided
+  useEffect(() => {
+    if (sampleId && routes.length > 0) {
+      const route = routes.find(r => r.sample_id === sampleId);
+      if (route) {
+        setSelectedRoute(route);
+        loadDetections(route.id);
+      }
+    }
+  }, [sampleId, routes]);
 
   const loadRoutes = async () => {
     try {
@@ -332,102 +348,161 @@ export default function ManageTab() {
           </div>
 
           {/* Sidebar - Right Side */}
-          <div className="w-80 bg-white border-l overflow-y-auto">
-            <div className="px-4 py-5 border-b">
-              <h3 className="text-lg font-medium text-gray-900">
-                Samples ({routes.length})
-              </h3>
-            </div>
-            <ul className="divide-y divide-gray-200">
-              {routes.map((route) => (
-                <li
-                  key={route.id}
-                  className={`cursor-pointer hover:bg-gray-50 ${selectedRoute?.id === route.id ? 'bg-blue-50 border-l-4 border-blue-400' : ''}`}
-                  onClick={() => handleRouteSelect(route)}
-                >
-                  <div className="px-4 py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{route.sample_id}</p>
-                        <p className="text-sm text-gray-500">{route.start_name} → {route.end_name}</p>
-                        <p className="text-xs text-gray-400">{new Date(route.collection_date).toLocaleDateString()}</p>
-                      </div>
-                      <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleDeleteRoute(route)}
-                          className="text-red-600 hover:text-red-900 text-sm font-medium"
-                        >
-                          Delete
-                        </button>
+          {!readOnly && (
+            <div className="w-80 bg-white border-l overflow-y-auto">
+              <div className="px-4 py-5 border-b">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Samples ({routes.length})
+                </h3>
+              </div>
+              <ul className="divide-y divide-gray-200">
+                {routes.map((route) => (
+                  <li
+                    key={route.id}
+                    className={`cursor-pointer hover:bg-gray-50 ${selectedRoute?.id === route.id ? 'bg-blue-50 border-l-4 border-blue-400' : ''}`}
+                    onClick={() => handleRouteSelect(route)}
+                  >
+                    <div className="px-4 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{route.sample_id}</p>
+                          <p className="text-sm text-gray-500">{route.start_name} → {route.end_name}</p>
+                          <p className="text-xs text-gray-400">{new Date(route.collection_date).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => handleDeleteRoute(route)}
+                            className="text-red-600 hover:text-red-900 text-sm font-medium"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Bottom Section: Upload and Detections */}
-        <div className="h-64 bg-gray-50 border-t overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Upload Section */}
-              <div>
-                <MetabarcodeUpload />
-              </div>
+        {!readOnly && (
+          <div className="h-64 bg-gray-50 border-t overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Upload Section */}
+                <div>
+                  <MetabarcodeUpload />
+                </div>
 
-              {/* Pathogen Detections */}
-              <div>
-                {selectedRoute ? (
-                  <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                    <div className="px-4 py-5 sm:px-6">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        Pathogen Detections for {selectedRoute.sample_id} ({detections.length})
-                      </h3>
+                {/* Pathogen Detections */}
+                <div>
+                  {selectedRoute ? (
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                      <div className="px-4 py-5 sm:px-6">
+                        <h3 className="text-lg font-medium text-gray-900">
+                          Pathogen Detections for {selectedRoute.sample_id} ({detections.length})
+                        </h3>
+                      </div>
+                      <ul className="divide-y divide-gray-200 max-h-48 overflow-y-auto">
+                        {detections.map((detection) => (
+                          <li key={detection.id}>
+                            <div className="px-4 py-4 sm:px-6">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {detection.pathogen_species?.species_name}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {detection.pathogen_species?.common_name}
+                                    <span className="ml-2 px-2 py-1 text-xs bg-gray-100 rounded">
+                                      {detection.pathogen_species?.disease_type}
+                                    </span>
+                                  </p>
+                                  <p className="text-sm font-semibold text-blue-600">
+                                    {detection.read_count.toLocaleString()} reads
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteDetection(detection)}
+                                  className="text-red-600 hover:text-red-900 text-sm font-medium"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="divide-y divide-gray-200 max-h-48 overflow-y-auto">
-                      {detections.map((detection) => (
-                        <li key={detection.id}>
-                          <div className="px-4 py-4 sm:px-6">
-                            <div className="flex items-center justify-between">
+                  ) : (
+                    <div className="bg-white shadow rounded-lg">
+                      <div className="px-4 py-12 text-center">
+                        <p className="text-gray-500">Select a sample to view pathogen detections</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Read-only view: Show sample details - max 50% height */}
+        {readOnly && selectedRoute && (
+          <div className="h-1/2 bg-gray-50 border-t overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div className="px-4 py-5 sm:px-6">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Sample Details: {selectedRoute.sample_id}
+                  </h3>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                    Collection information and pathogen detections
+                  </p>
+                </div>
+                <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+                  <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Collection Date</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{new Date(selectedRoute.collection_date).toLocaleDateString()}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Sample Route</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{selectedRoute.start_name} → {selectedRoute.end_name}</dd>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <dt className="text-sm font-medium text-gray-500 mb-3">Detected Pathogens ({detections.length})</dt>
+                      <dd className="mt-1">
+                        <ul className="border border-gray-200 rounded-md divide-y divide-gray-200 max-h-64 overflow-y-auto">
+                          {detections.map((detection) => (
+                            <li key={detection.id} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
                               <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">
+                                <p className="font-medium text-gray-900">
                                   {detection.pathogen_species?.species_name}
                                 </p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-gray-500">
                                   {detection.pathogen_species?.common_name}
                                   <span className="ml-2 px-2 py-1 text-xs bg-gray-100 rounded">
                                     {detection.pathogen_species?.disease_type}
                                   </span>
                                 </p>
-                                <p className="text-sm font-semibold text-blue-600">
-                                  {detection.read_count.toLocaleString()} reads
-                                </p>
                               </div>
-                              <button
-                                onClick={() => handleDeleteDetection(detection)}
-                                className="text-red-600 hover:text-red-900 text-sm font-medium"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="bg-white shadow rounded-lg">
-                    <div className="px-4 py-12 text-center">
-                      <p className="text-gray-500">Select a sample to view pathogen detections</p>
+                              <span className="text-blue-600 font-semibold">
+                                {detection.read_count.toLocaleString()} reads
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </dd>
                     </div>
-                  </div>
-                )}
+                  </dl>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
   );
 }
