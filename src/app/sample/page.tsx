@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import RoleGuard from '@/components/RoleGuard';
@@ -21,7 +21,7 @@ const ManageTab = dynamic(() => import('@/components/sample/ManageTab'), {
 
 type TabType = 'collect' | 'manage';
 
-export default function SamplePage() {
+function SamplePageContent() {
   const searchParams = useSearchParams();
   const sampleId = searchParams.get('id');
   const user = AuthService.getCurrentUser();
@@ -139,5 +139,13 @@ export default function SamplePage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function SamplePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <SamplePageContent />
+    </Suspense>
   );
 }
