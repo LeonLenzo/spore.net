@@ -41,8 +41,8 @@ interface PathogenSpecies {
 }
 
 export default function DataManagement() {
-  const handleLogout = () => {
-    AuthService.logout();
+  const handleLogout = async () => {
+    await AuthService.logout();
     window.location.href = '/admin/login';
   };
   const [routes, setRoutes] = useState<SamplingRoute[]>([]);

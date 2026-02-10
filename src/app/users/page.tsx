@@ -16,11 +16,21 @@ interface User {
   last_login: string | null;
 }
 
+interface EditData {
+  full_name: string;
+  email: string;
+  role: 'viewer' | 'sampler' | 'admin';
+  is_active: boolean;
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [viewAsRole, setViewAsRole] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<EditData | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -123,6 +133,42 @@ export default function UsersPage() {
     }
   };
 
+  const handleEditStart = (user: User) => {
+    setEditingId(user.id);
+    setEditData({
+      full_name: user.full_name || '',
+      email: user.email,
+      role: user.role,
+      is_active: user.is_active
+    });
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditData(null);
+  };
+
+  const handleEditSave = async (userId: string) => {
+    if (!editData) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, ...editData })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to update user');
+      setEditingId(null);
+      setEditData(null);
+      loadUsers();
+    } catch (error) {
+      alert('Failed to save: ' + (error as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
@@ -183,7 +229,7 @@ export default function UsersPage() {
                       type="text"
                       value={formData.full_name}
                       onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -195,7 +241,7 @@ export default function UsersPage() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -207,7 +253,7 @@ export default function UsersPage() {
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                       minLength={6}
                     />
@@ -269,49 +315,118 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.id} className={!user.is_active ? 'bg-gray-50 opacity-60' : ''}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{user.full_name || 'N/A'}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                        user.role === 'sampler' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {user.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleToggleActive(user.id, user.is_active)}
-                        className={`${user.is_active ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'} mr-4`}
-                      >
-                        {user.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id, user.email)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const isEditing = editingId === user.id;
+                  return (
+                    <tr key={user.id} className={!user.is_active && !isEditing ? 'bg-gray-50 opacity-60' : ''}>
+                      {/* Name & Email */}
+                      <td className={`px-6 py-4 ${isEditing ? 'min-w-[220px]' : 'whitespace-nowrap'}`}>
+                        {isEditing && editData ? (
+                          <div className="space-y-1">
+                            <input
+                              type="text"
+                              value={editData.full_name}
+                              onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                              placeholder="Full name"
+                              className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                            <input
+                              type="email"
+                              value={editData.email}
+                              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                              className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{user.full_name || 'N/A'}</div>
+                            <div className="text-sm text-gray-500">{user.email}</div>
+                          </div>
+                        )}
+                      </td>
+                      {/* Role */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isEditing && editData ? (
+                          <select
+                            value={editData.role}
+                            onChange={(e) => setEditData({ ...editData, role: e.target.value as EditData['role'] })}
+                            className="px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          >
+                            <option value="viewer">Viewer</option>
+                            <option value="sampler">Sampler</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                            user.role === 'sampler' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {user.role}
+                          </span>
+                        )}
+                      </td>
+                      {/* Status */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isEditing && editData ? (
+                          <select
+                            value={editData.is_active ? 'active' : 'inactive'}
+                            onChange={(e) => setEditData({ ...editData, is_active: e.target.value === 'active' })}
+                            className="px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        )}
+                      </td>
+                      {/* Last Login */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
+                      </td>
+                      {/* Actions */}
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                        {isEditing ? (
+                          <>
+                            <button
+                              onClick={() => handleEditSave(user.id)}
+                              disabled={saving}
+                              className="text-blue-600 hover:text-blue-900 font-medium disabled:opacity-50"
+                            >
+                              {saving ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={handleEditCancel}
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleEditStart(user)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.email)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             {users.length === 0 && (

@@ -15,8 +15,8 @@ interface PathogenSpecies {
 }
 
 export default function PathogenManagement() {
-  const handleLogout = () => {
-    AuthService.logout();
+  const handleLogout = async () => {
+    await AuthService.logout();
     window.location.href = '/admin/login';
   };
   const [pathogens, setPathogens] = useState<PathogenSpecies[]>([]);

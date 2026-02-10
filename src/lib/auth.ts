@@ -3,7 +3,6 @@
  * Roles: viewer (map only), sampler (map + field collection), admin (full access)
  */
 
-import { supabase } from './supabase';
 
 export type UserRole = 'viewer' | 'sampler' | 'admin';
 
@@ -29,45 +28,16 @@ export class AuthService {
    */
   static async login(email: string, password: string): Promise<User | null> {
     try {
-      // Query user from database
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('id, email, role, full_name, is_active')
-        .eq('email', email.toLowerCase())
-        .eq('is_active', true)
-        .single();
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (error || !userData) {
-        console.error('Login failed:', error);
-        return null;
-      }
+      if (!response.ok) return null;
 
-      // For now, use simple password check (in production, use bcrypt)
-      // This is a placeholder - you'll need to implement proper password hashing
-      const { data: passwordCheck } = await supabase
-        .from('users')
-        .select('password_hash')
-        .eq('email', email.toLowerCase())
-        .single();
-
-      // Simple password comparison (REPLACE WITH BCRYPT IN PRODUCTION)
-      if (!passwordCheck || passwordCheck.password_hash !== password) {
-        return null;
-      }
-
-      const user: User = {
-        id: userData.id,
-        email: userData.email,
-        role: userData.role as UserRole,
-        fullName: userData.full_name,
-        isActive: userData.is_active,
-      };
-
-      // Update last login
-      await supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', user.id);
+      const { user } = await response.json();
+      if (!user) return null;
 
       // Store session in localStorage
       if (typeof window !== 'undefined') {
@@ -117,11 +87,16 @@ export class AuthService {
   }
 
   /**
-   * Logout current user
+   * Logout current user — clears localStorage and invalidates server session cookie
    */
-  static logout(): void {
+  static async logout(): Promise<void> {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(this.SESSION_KEY);
+    }
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch {
+      // Best-effort — local session is already cleared
     }
   }
 

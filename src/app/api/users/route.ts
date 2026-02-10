@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+import { requireAuth } from '@/lib/apiAuth';
 
 // Service role client bypasses RLS for admin operations
 const supabaseAdmin = createClient(
@@ -11,6 +12,9 @@ const supabaseAdmin = createClient(
 
 // GET - List all users
 export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request, 'admin');
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { data, error } = await supabaseAdmin
       .from('users')
@@ -31,6 +35,9 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new user
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth(request, 'admin');
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const body = await request.json();
     const { email, password, full_name, role } = body;
@@ -94,8 +101,55 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PATCH - Update user
+export async function PATCH(request: NextRequest) {
+  const auth = await requireAuth(request, 'admin');
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    const body = await request.json();
+    const { id, email, full_name, role, is_active } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    // Build update object from provided fields
+    const updates: Record<string, unknown> = {};
+    if (email !== undefined) updates.email = email.toLowerCase();
+    if (full_name !== undefined) updates.full_name = full_name;
+    if (role !== undefined) {
+      if (!['viewer', 'sampler', 'admin'].includes(role)) {
+        return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+      }
+      updates.role = role;
+    }
+    if (is_active !== undefined) updates.is_active = is_active;
+
+    const { data: updatedUser, error } = await supabaseAdmin
+      .from('users')
+      .update(updates)
+      .eq('id', id)
+      .select('id, email, role, full_name, is_active, created_at, last_login')
+      .single();
+
+    if (error) {
+      console.error('Error updating user:', error);
+      return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    }
+
+    return NextResponse.json({ user: updatedUser });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 // DELETE - Delete user
 export async function DELETE(request: NextRequest) {
+  const auth = await requireAuth(request, 'admin');
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('id');

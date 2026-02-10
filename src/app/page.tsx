@@ -96,8 +96,8 @@ export default function Home() {
     );
   };
 
-  const handleLogout = () => {
-    AuthService.logout();
+  const handleLogout = async () => {
+    await AuthService.logout();
     setUser(null);
     router.refresh();
   };

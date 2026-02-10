@@ -356,8 +356,8 @@ export default function CollectTab() {
     }
   };
 
-  const handleLogout = () => {
-    AuthService.logout();
+  const handleLogout = async () => {
+    await AuthService.logout();
     router.push('/login');
   };
 
