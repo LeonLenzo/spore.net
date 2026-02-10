@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+
+// Service role client bypasses RLS for admin operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // GET - List all users
 export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('id, email, role, full_name, is_active, created_at, last_login')
       .order('created_at', { ascending: false });
@@ -45,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', email.toLowerCase())
@@ -58,14 +65,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 10);
+
     // Create new user
-    // NOTE: In production, you should hash the password with bcrypt
-    // For now, we're storing plain text (NOT SECURE - REPLACE IN PRODUCTION)
-    const { data: newUser, error } = await supabase
+    const { data: newUser, error } = await supabaseAdmin
       .from('users')
       .insert({
         email: email.toLowerCase(),
-        password_hash: password, // REPLACE WITH BCRYPT HASH IN PRODUCTION
+        password_hash,
         full_name,
         role,
         is_active: true,
@@ -97,7 +105,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete user
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('users')
       .delete()
       .eq('id', userId);
