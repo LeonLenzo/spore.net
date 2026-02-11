@@ -48,7 +48,7 @@ export async function requireAuth(
     return NextResponse.json({ error: 'Session expired' }, { status: 401 });
   }
 
-  const userData = session.users as { id: string; email: string; role: UserRole; is_active: boolean } | null;
+  const userData = (Array.isArray(session.users) ? session.users[0] : session.users) as unknown as { id: string; email: string; role: UserRole; is_active: boolean } | null;
 
   if (!userData || !userData.is_active) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
